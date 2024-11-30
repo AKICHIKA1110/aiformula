@@ -5,7 +5,7 @@ import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from can_msgs.msg import Frame
-from std_msgs.msg import Float32  # 電流と電圧のパブリッシュに使用
+from std_msgs.msg import Float32
 from typing import List
 
 class MotorController(Node):
@@ -45,7 +45,7 @@ class MotorController(Node):
         can_data = cmd_right + cmd_left
         self.frame_msg.header.frame_id = "can0"        # Default can0
         self.frame_msg.id = 0x210                      # MotorController CAN ID : 0x210
-        self.frame_msg.dlc = 8                         # Data length
+        self.frame_msg.dlc = 8                         # Data length Byte
         self.frame_msg.is_extended = False             # 標準IDを使用
         self.frame_msg.data = can_data
 
@@ -54,7 +54,7 @@ class MotorController(Node):
 
     def can_frame_callback(self, msg: Frame):
         # モータ電流と電圧のデータを含むCAN IDをフィルタリング
-        if msg.id == 0x218:  # 仮のCAN ID（実際のIDに置き換えてください）
+        if msg.id == 0x218:  # CAN ID (V)
             # データから左右モータの電流を抽出
             current_left = self.extract_current(msg.data[0:4])
             current_right = self.extract_current(msg.data[4:8])
@@ -63,7 +63,7 @@ class MotorController(Node):
             self.current_pub_left.publish(Float32(data=current_left))
             self.current_pub_right.publish(Float32(data=current_right))
 
-        elif msg.id == 0x219:  # 仮のCAN ID（実際のIDに置き換えてください）
+        elif msg.id == 0x219:  # CAN ID (I)
             # データから電圧を抽出
             voltage = self.extract_voltage(msg.data[0:4])
 
@@ -72,8 +72,9 @@ class MotorController(Node):
 
     def extract_current(self, data_bytes: bytes) -> float:
         # バイトデータを整数に変換し、電流値を計算
+        k = 1 #scale setting
         current_raw = int.from_bytes(data_bytes, byteorder='little', signed=True)
-        current = current_raw * 0.1  # 仮のスケーリング（実際のスケールに合わせて調整）
+        current = current_raw * k  #scale 
         return current
 
     def extract_voltage(self, data_bytes: bytes) -> float:
