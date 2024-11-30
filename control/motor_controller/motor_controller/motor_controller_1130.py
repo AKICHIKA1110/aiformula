@@ -54,7 +54,7 @@ class MotorController(Node):
 
     def can_frame_callback(self, msg: Frame):
         # モータ電流と電圧のデータを含むCAN IDをフィルタリング
-        if msg.id == 0x218:  # CAN ID (V)
+        if msg.id == 0x111:  # CAN ID (V)
             # データから左右モータの電流を抽出
             current_left = self.extract_current(msg.data[0:4])
             current_right = self.extract_current(msg.data[4:8])
@@ -63,7 +63,7 @@ class MotorController(Node):
             self.current_pub_left.publish(Float32(data=current_left))
             self.current_pub_right.publish(Float32(data=current_right))
 
-        elif msg.id == 0x219:  # CAN ID (I)
+        elif msg.id == 0x111:  # CAN ID (I)
             # データから電圧を抽出
             voltage = self.extract_voltage(msg.data[0:4])
 
